@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+install_deps() {
+    sudo apt update
+    sudo apt install -y cmake gettext lua5.1 liblua5.1-0-dev build-essential git
+}
+
+build_neovim() {
+    local nvim_dir="$HOME/personal/nvim"
+    mkdir -p "$nvim_dir"
+    git clone https://github.com/neovim/neovim.git "$nvim_dir"
+    pushd "$nvim_dir"
+    make CMAKE_BUILD_TYPE=RelWithDebInfo -j"$(nproc)"
+    sudo make install
+    popd
+}
+
+if ! command -v nvim &> /dev/null; then
+    install_deps
+    build_neovim
+fi

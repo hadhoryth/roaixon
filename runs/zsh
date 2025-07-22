@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+if ! command -v zsh &> /dev/null; then
+    sudo apt update && sudo apt install -y zsh
+fi
+
+local_ohmyzsh_dir="$HOME/personal/oh-my-zsh"
+if  [[ ! -d "$local_ohmyzsh_dir" && ! -f "$local_ohmyzsh_dir/oh-my-zsh.sh" ]]; then
+    sudo chsh -s $(which zsh)
+    ZSH="$local_ohmyzsh_dir" RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
+
+AUTOCOMPLETE="$HOME/personal/autocomplete"
+if [[ ! -d $AUTOCOMPLETE ]]; then
+    git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git $AUTOCOMPLETE
+fi

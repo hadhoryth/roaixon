@@ -1,0 +1,21 @@
+export XDG_CONFIG_HOME=$HOME/.config
+VIM="nvim"
+
+PERSONAL=$XDG_CONFIG_HOME/personal
+for i in `find -L $PERSONAL`; do
+    source $i
+done
+
+# FZF
+fzf_dir="$HOME/personal/fzf"
+if [[ ! "$PATH" == */$HOME/personal/fzf/bin* ]]; then
+  export PATH="${PATH:+${PATH}:}/$fzf_dir/bin"
+fi
+source "$fzf_dir/shell/key-bindings.zsh"
+source "$fzf_dir/shell/completion.zsh"
+
+
+#export EDITOR="nvim"
+#export VIMRUNTIME="/usr/local/share/nvim/runtime/"
+#export PATH=$PATH:$HOME/.local/bin
+

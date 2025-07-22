@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+
+
+dry_run=0
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dry)
+            dry_run=1
+            ;;
+        *)
+            ;;
+    esac
+    shift
+done
+
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+
+log() {
+    if [[ $dry_run -eq 1 ]]; then
+        echo "[DRY_RUN]: $1"
+    else
+        echo "$1"
+    fi
+}
+
+copy_config(){
+   local config_dir="$HOME/.config"
+   local dev_config_dir="$script_dir/env/.config"
+   if [[ $dry_run -eq 1 ]]; then
+        echo "[DRY_RUN]: Copiyng $dev_config_dir to $config_dir"
+   else
+  	mkdir -p "$config_dir"
+	cp -a "$dev_config_dir/." "$config_dir"
+   fi
+}
+
+copy_zsh_config(){
+   local config_dir="$HOME/personal"
+   local zsh_config_dir="$script_dir/env"
+   if [[ $dry_run -eq 1 ]]; then
+      echo "[DRY_RUN]: COPYING zsh config files to $config_dir"
+   else
+	   for file in "$zsh_config_dir"/.zsh*; do
+		   cp -a "$file" "$config_dir"
+	   done
+   fi
+}
+
+copy_config
+copy_zsh_config
+
+runs_dir=`find $script_dir/runs -mindepth 1 -maxdepth 1 -executable`
+
+for s in $runs_dir; do
+    log "running script: $s"
+    if [[ $dry_run == "0" ]]; then
+        $s
+    fi
+done
+
+
+
