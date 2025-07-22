@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 tmux_plugins_dir=$HOME/personal/tmux/plugins
+mkdir -p "$tmux_plugins_dir"
 
 
 if ! command -v tmux &> /dev/null; then

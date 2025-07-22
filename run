@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 dry_run=0
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -46,9 +45,6 @@ copy_zsh_config(){
    fi
 }
 
-copy_config
-copy_zsh_config
-
 runs_dir=`find $script_dir/runs -mindepth 1 -maxdepth 1 -executable`
 
 for s in $runs_dir; do
@@ -58,5 +54,10 @@ for s in $runs_dir; do
     fi
 done
 
+copy_config
+copy_zsh_config
+
+echo -e "\nActivate environment with"
+echo "source $HOME/personal/.zshrc"
 
 

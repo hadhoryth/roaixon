@@ -4,6 +4,7 @@ if ! command -v zsh &> /dev/null; then
 fi
 
 local_ohmyzsh_dir="$HOME/personal/oh-my-zsh"
+mkdir -p "$(dirname $local_ohmyzsh_dir)"
 if  [[ ! -d "$local_ohmyzsh_dir" && ! -f "$local_ohmyzsh_dir/oh-my-zsh.sh" ]]; then
     sudo chsh -s $(which zsh)
     ZSH="$local_ohmyzsh_dir" RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
