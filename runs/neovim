@@ -7,11 +7,11 @@ install_deps() {
 
 build_neovim() {
     local nvim_dir="$HOME/personal/nvim"
-    mkdir -p "$nvim_dir"
-    git clone https://github.com/neovim/neovim.git "$nvim_dir"
+    mkdir -p "$(dirname $nvim_dir)"
+    [ ! -d "$nvim_dir" ] && git clone https://github.com/neovim/neovim.git "$nvim_dir"
     pushd "$nvim_dir"
     make CMAKE_BUILD_TYPE=RelWithDebInfo -j"$(nproc)"
-    sudo make install
+    make install
     popd
 }
 

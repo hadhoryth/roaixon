@@ -59,5 +59,3 @@ copy_zsh_config
 
 echo -e "\nActivate environment with"
 echo "source $HOME/personal/.zshrc"
-
-

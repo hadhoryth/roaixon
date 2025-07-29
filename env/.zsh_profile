@@ -14,8 +14,28 @@ fi
 source "$fzf_dir/shell/key-bindings.zsh"
 source "$fzf_dir/shell/completion.zsh"
 
+# Navigation
+autoload -U select-word-style
+select-word-style shell
 
-#export EDITOR="nvim"
-#export VIMRUNTIME="/usr/local/share/nvim/runtime/"
-#export PATH=$PATH:$HOME/.local/bin
+bindkey "^[[1;3D" backward-word
+bindkey "^[[1;3C" forward-word
 
+function backward-slash-word() {
+  while [[ -n $LBUFFER && $LBUFFER != */ ]]; do
+    zle backward-char
+  done
+  [[ $LBUFFER == */ ]] && zle backward-char
+}
+zle -N backward-slash-word
+
+function forward-slash-word() {
+  while [[ -n $RBUFFER && $RBUFFER != /* ]]; do
+    zle forward-char
+  done
+  [[ $RBUFFER == /* ]] && zle forward-char
+}
+zle -N forward-slash-word
+
+bindkey "^[[1;4D" backward-slash-word
+bindkey "^[[1;4C" forward-slash-word
