@@ -1,2 +1,8 @@
-alias ls="ls -la"
+export LSCOLORS=ExFxCxDxBxegedabagaced
+alias ls="ls --color=auto"
+alias ll="ls -lah --color=auto"
+
+alias ipython='python -m IPython'
+alias dokcer='docker'
+alias had_session='eval $(ssh-agent) && ssh-add ~/.ssh/personal/hadhoryth'
 
