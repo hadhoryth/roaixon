@@ -1,3 +1,7 @@
+require("lazy_init")
+
+vim.opt.termguicolors = true
+
 -- Basic settings
 vim.opt.number = true
 vim.opt.relativenumber = true

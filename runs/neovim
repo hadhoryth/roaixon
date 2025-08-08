@@ -11,7 +11,7 @@ build_neovim() {
     [ ! -d "$nvim_dir" ] && git clone https://github.com/neovim/neovim.git "$nvim_dir"
     pushd "$nvim_dir"
     make CMAKE_BUILD_TYPE=RelWithDebInfo -j"$(nproc)"
-    make install
+    sudo make install
     popd
 }
 
