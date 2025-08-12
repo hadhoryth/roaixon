@@ -4,7 +4,10 @@ local wezterm = require("wezterm")
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
-config.font = wezterm.font("MesloLGS Nerd Font Mono")
+config.font = wezterm.font_with_fallback({
+    "BitstromWera Nerd Font",
+    "monospace"
+})
 config.font_size = 19
 
 config.enable_tab_bar = false

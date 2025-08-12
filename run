@@ -35,13 +35,10 @@ copy_config(){
 
 copy_zsh_config(){
    local config_dir="$HOME/personal"
-   local zsh_config_dir="$script_dir/env"
    if [[ $dry_run -eq 1 ]]; then
       echo "[DRY_RUN]: COPYING zsh config files to $config_dir"
    else
-	   for file in "$zsh_config_dir"/.zsh*; do
-		   cp -a "$file" "$config_dir"
-	   done
+       find "$script_dir/env" -maxdepth 1 -type f -name "*.zsh*" -exec cp -a {} "$config_dir" \;
    fi
 }
 
