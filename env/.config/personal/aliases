@@ -6,3 +6,4 @@ alias ipython='python -m IPython'
 alias dokcer='docker'
 alias had_session='eval $(ssh-agent) && ssh-add ~/.ssh/personal/hadhoryth'
 
+alias tmux='tmux -f ~/.config/tmux/tmux.conf'
