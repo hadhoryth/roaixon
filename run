@@ -17,8 +17,8 @@ run() { dry && printf '[DRY_RUN] %s\n' "$*" || "$@"; }
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 copy_config() {
-  local config_dir="$HOME/.config/"
-  local dev_config_dir="$script_dir/env/.config"
+  local config_dir="$HOME/.config"
+  local dev_config_dir="$script_dir/env/.config/"
 
   run mkdir -p "$config_dir"
   run cp -r "$dev_config_dir" "$config_dir"

@@ -13,7 +13,31 @@ end
 
 vim.opt.rtp:prepend(lazypath)
 
+
 require("lazy").setup({
-  spec = { { import = "plugins" } },
+  spec = {
+    { import = "plugins" },
+
+    -- Theme plugin
+    {
+      "catppuccin/nvim",
+      name = "catppuccin",
+      priority = 1000,
+      lazy = false, -- ensure it loads at startup
+      opts = {
+        flavour = "mocha", -- optional
+        custom_highlights = function(colors)
+          return {
+            -- Python import keyword (Treesitter group)
+            ["@module"] = { style = { "bold" } },
+          }
+        end,
+      },
+      config = function(_, opts)
+        require("catppuccin").setup(opts)
+        vim.cmd.colorscheme("catppuccin")
+      end,
+    },
+  },
   checker = { enabled = true },
 })
