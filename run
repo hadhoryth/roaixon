@@ -1,58 +1,55 @@
 #!/usr/bin/env bash
 
-dry_run=0
+DRY_RUN=0
+
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --dry)
-            dry_run=1
-            ;;
-        *)
-            ;;
-    esac
-    shift
+  case "$1" in
+    --dry|-n) DRY_RUN=1; shift ;;
+    *) echo "Unknown option: $1"; exit 1 ;;
+  esac
 done
 
-script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+log() { printf '%s\n' "$*"; }
+dry() { [[ $DRY_RUN -eq 1 ]]; }
+run() { dry && printf '[DRY_RUN] %s\n' "$*" || "$@"; }
 
-log() {
-    if [[ $dry_run -eq 1 ]]; then
-        echo "[DRY_RUN]: $1"
-    else
-        echo "$1"
-    fi
+
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+copy_config() {
+  local config_dir="$HOME/.config/"
+  local dev_config_dir="$script_dir/env/.config"
+
+  run mkdir -p "$config_dir"
+  run cp -r "$dev_config_dir" "$config_dir"
 }
 
-copy_config(){
-   local config_dir="$HOME/.config"
-   local dev_config_dir="$script_dir/env/.config"
-   if [[ $dry_run -eq 1 ]]; then
-        echo "[DRY_RUN]: Copiyng $dev_config_dir to $config_dir"
-   else
-  	mkdir -p "$config_dir"
-	cp -a "$dev_config_dir/." "$config_dir"
-   fi
+copy_zsh_config() {
+  local dest_dir="$HOME/personal"
+  local src_dir="$script_dir/env"
+
+  run mkdir -p "$dest_dir"
+  run find "$src_dir" -type f -name ".*zsh*" -exec cp {} "$dest_dir" \; 
 }
 
-copy_zsh_config(){
-   local config_dir="$HOME/personal"
-   if [[ $dry_run -eq 1 ]]; then
-      echo "[DRY_RUN]: COPYING zsh config files to $config_dir"
-   else
-       find "$script_dir/env" -maxdepth 1 -type f -name "*.zsh*" -exec cp -a {} "$config_dir" \;
-   fi
+run_executables() {
+  local runs_dir="$script_dir/runs"
+
+  if [[ -d "$runs_dir" ]]; then
+    for s in "$runs_dir"/*; do
+      [[ -f "$s" && -x "$s" ]] || continue
+      run "$s"
+    done
+  else
+    log "No runs directory at $runs_dir (skipping)"
+  fi
 }
 
-runs_dir=`find $script_dir/runs -mindepth 1 -maxdepth 1 -executable`
-
-for s in $runs_dir; do
-    log "running script: $s"
-    if [[ $dry_run == "0" ]]; then
-        $s
-    fi
-done
-
+run_executables
 copy_config
 copy_zsh_config
 
-echo -e "\nActivate environment with"
-echo "source $HOME/personal/.zshrc"
+if ! dry; then
+  printf '\nActivate environment with:\n'
+  printf '  source "%s/personal/.zshrc"\n' "$HOME"
+fi

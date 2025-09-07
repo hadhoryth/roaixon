@@ -1,3 +1,6 @@
+-- Set leader key before loading plugins
+vim.g.mapleader = " "
+
 require("lazy_init")
 
 vim.opt.termguicolors = true
@@ -14,6 +17,6 @@ vim.opt.hlsearch = true
 vim.opt.incsearch = true
 
 -- Key mappings
-vim.g.mapleader = " "
 vim.keymap.set("n", "<leader>w", ":w<CR>")
 vim.keymap.set("n", "<leader>q", ":q<CR>")
+

@@ -5,7 +5,7 @@ export TERM=xterm-256color
 export XDG_CONFIG_HOME=$HOME/.config
 VIM="nvim"
 
-PERSONAL=$XDG_CONFIG_HOME/personal
+PERSONAL=$XDG_CONFIG_HOME/.config/personal
 for i in `find -L $PERSONAL`; do
     source $i
 done
