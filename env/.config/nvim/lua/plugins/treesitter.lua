@@ -12,6 +12,9 @@ return {
       "python",
       "json",
       "markdown",
+      "typescript",
+      "tsx",
+      "javascript",
     },
     auto_install = true,
     highlight = {

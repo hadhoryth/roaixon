@@ -73,16 +73,45 @@ return {
         end,
       })
 
+      -- Mason LSP setup
       require('mason-lspconfig').setup({
-        ensure_installed = {},
+        ensure_installed = { "tsserver" }, -- auto-install TypeScript server
         handlers = {
-          -- this first function is the "default handler"
-          -- it applies to every language server without a "custom handler"
+          -- Custom handler for tsserver
+          ["tsserver"] = function()
+            require("lspconfig").tsserver.setup({
+              on_attach = function(client, bufnr)
+                -- Disable formatting if you use Prettier/Biome/ESLint
+                client.server_capabilities.documentFormattingProvider = false
+              end,
+              settings = {
+                typescript = {
+                  inlayHints = {
+                    includeInlayParameterNameHints = "all",
+                    includeInlayVariableTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                  },
+                  suggest = { completeFunctionCalls = true },
+                },
+                javascript = {
+                  inlayHints = {
+                    includeInlayParameterNameHints = "all",
+                    includeInlayVariableTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                  },
+                },
+              },
+            })
+          end,
+
+          -- Default handler for all other servers
           function(server_name)
-            require('lspconfig')[server_name].setup({})
+            require("lspconfig")[server_name].setup({})
           end,
         }
-      })
-    end
+      })    
+     end
   }
 }
