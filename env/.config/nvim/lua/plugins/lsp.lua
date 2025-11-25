@@ -75,10 +75,10 @@ return {
 
       -- Mason LSP setup
       require('mason-lspconfig').setup({
-        ensure_installed = { "tsserver" }, -- auto-install TypeScript server
+        ensure_installed = { "ts_ls" }, 
         handlers = {
           -- Custom handler for tsserver
-          ["tsserver"] = function()
+          ["ts_ls"] = function()
             require("lspconfig").tsserver.setup({
               on_attach = function(client, bufnr)
                 -- Disable formatting if you use Prettier/Biome/ESLint
