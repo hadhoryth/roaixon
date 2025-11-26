@@ -1,48 +1,46 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OS="${OS:-${OSTYPE:-}}"
+log() {
+  printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$*"
+}
 
 have() { command -v "$1" &>/dev/null; }
 
-# Install zsh if missing
 if ! have zsh; then
-  echo "Installing zsh..."
-  if [[ "$OS" == darwin* ]]; then
+  log "Installing zsh"
+  if [[ "${OSTYPE:-}" == darwin* ]]; then
     brew install zsh
   else
     sudo apt update && sudo apt install -y zsh
   fi
 fi
 
-readonly LOCAL_OHMYZSH_DIR="$HOME/personal/oh-my-zsh"
-
-mkdir -p "$(dirname "$LOCAL_OHMYZSH_DIR")"
-if [[ ! -d "$LOCAL_OHMYZSH_DIR" ]]; then
-  echo "Installing Oh My Zsh..."
-  ZSH="$LOCAL_OHMYZSH_DIR" RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+OHMYZSH_DIR="$HOME/personal/oh-my-zsh"
+if [[ ! -d "$OHMYZSH_DIR" ]]; then
+  log "Installing Oh My Zsh"
+  ZSH="$OHMYZSH_DIR" RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
-# Set zsh as default shell
 if [[ "$SHELL" != *zsh ]]; then
-  echo "Setting zsh as default shell..."
-  if [[ "$OS" == darwin* ]]; then
+  log "Setting zsh as default shell"
+  if [[ "${OSTYPE:-}" == darwin* ]]; then
     chsh -s "$(which zsh)"
   else
     sudo chsh -s "$(which zsh)" "$(whoami)"
   fi
 fi
 
-readonly AUTOCOMPLETE="$HOME/personal/autocomplete"
-if [[ ! -d "$AUTOCOMPLETE" ]]; then
-  echo "Installing zsh-autocomplete..."
-  git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git "$AUTOCOMPLETE"
+AUTOCOMPLETE_DIR="$HOME/personal/autocomplete"
+if [[ ! -d "$AUTOCOMPLETE_DIR" ]]; then
+  log "Installing zsh-autocomplete"
+  git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git "$AUTOCOMPLETE_DIR"
 fi
 
-readonly POWERLEVEL10K_DIR="$LOCAL_OHMYZSH_DIR/custom/themes/powerlevel10k"
+POWERLEVEL10K_DIR="$OHMYZSH_DIR/custom/themes/powerlevel10k"
 if [[ ! -d "$POWERLEVEL10K_DIR" ]]; then
-  echo "Installing Powerlevel10k theme..."
-  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$POWERLEVEL10K_DIR"
+  log "Installing Powerlevel10k"
+  git clone --depth 1 https://github.com/romkatv/powerlevel10k.git "$POWERLEVEL10K_DIR"
 fi
 
-echo "zsh setup complete."
+log "Done"

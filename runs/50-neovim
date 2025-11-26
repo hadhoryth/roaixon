@@ -1,48 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OS="${OS:-${OSTYPE:-}}"
+log() {
+  printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$*"
+}
 
-have() { command -v "$1" &>/dev/null; }
+[[ "${OSTYPE:-}" != darwin* ]] && sudo apt update
 
-install_neovim_mac() {
-  if ! have nvim; then
-    echo "Installing neovim via Homebrew..."
+if [[ "${OSTYPE:-}" == darwin* ]]; then
+  if ! command -v nvim &>/dev/null; then
+    log "Installing neovim"
     brew install neovim
-  else
-    echo "neovim already installed."
   fi
-}
-
-install_neovim_linux() {
-  if have nvim; then
-    echo "neovim already installed."
-    return
-  fi
-
-  echo "Installing neovim build dependencies..."
-  sudo apt update
-  sudo apt install -y cmake gettext lua5.1 liblua5.1-0-dev build-essential git ninja-build
-
-  local nvim_dir="$HOME/personal/nvim"
-  mkdir -p "$(dirname "$nvim_dir")"
-  
-  if [[ ! -d "$nvim_dir" ]]; then
-    echo "Cloning neovim..."
-    git clone https://github.com/neovim/neovim.git "$nvim_dir"
-  fi
-
-  pushd "$nvim_dir" >/dev/null
-  git checkout stable
-  make CMAKE_BUILD_TYPE=RelWithDebInfo -j"$(nproc)"
-  sudo make install
-  popd >/dev/null
-}
-
-if [[ "$OS" == darwin* ]]; then
-  install_neovim_mac
 else
-  install_neovim_linux
+  if ! command -v nvim &>/dev/null; then
+    log "Installing neovim build dependencies"
+    sudo apt install -y cmake gettext lua5.1 liblua5.1-0-dev build-essential git ninja-build
+
+    nvim_dir="$HOME/personal/nvim"
+    mkdir -p "$(dirname "$nvim_dir")"
+
+    if [[ ! -d "$nvim_dir" ]]; then
+      log "Cloning neovim"
+      git clone https://github.com/neovim/neovim.git "$nvim_dir" 2>/dev/null || true
+    fi
+
+    log "Building neovim"
+    (cd "$nvim_dir" && git checkout stable && make CMAKE_BUILD_TYPE=RelWithDebInfo -j"$(nproc)" && sudo make install)
+  fi
 fi
 
-echo "neovim setup complete."
+log "Done"
