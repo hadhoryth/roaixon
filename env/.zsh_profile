@@ -2,30 +2,45 @@ export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export TERM=xterm-256color
 
-export XDG_CONFIG_HOME=$HOME/.config
-VIM="nvim"
+export XDG_CONFIG_HOME="$HOME/.config"
+export EDITOR="nvim"
 
-PERSONAL=$XDG_CONFIG_HOME/.config/personal
-for i in `find -L $PERSONAL`; do
-    source $i
-done
+# Source personal configs
+PERSONAL="$XDG_CONFIG_HOME/personal"
+if [[ -d "$PERSONAL" ]]; then
+  for f in "$PERSONAL"/*; do
+    [[ -f "$f" ]] && source "$f"
+  done
+fi
 
 # FZF
 fzf_dir="$HOME/personal/fzf"
-if [[ ! "$PATH" == */$HOME/personal/fzf/bin* ]]; then
-  export PATH="${PATH:+${PATH}:}/$fzf_dir/bin"
+if [[ -d "$fzf_dir" ]]; then
+  [[ ":$PATH:" != *":$fzf_dir/bin:"* ]] && export PATH="$PATH:$fzf_dir/bin"
+  [[ -f "$fzf_dir/shell/key-bindings.zsh" ]] && source "$fzf_dir/shell/key-bindings.zsh"
+  [[ -f "$fzf_dir/shell/completion.zsh" ]] && source "$fzf_dir/shell/completion.zsh"
 fi
-source "$fzf_dir/shell/key-bindings.zsh"
-source "$fzf_dir/shell/completion.zsh"
 
-# Navigation
+# fd for fzf (faster than find)
+if command -v fd &>/dev/null; then
+  export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
+  export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+fi
+
+# direnv - auto-load .envrc files
+if command -v direnv &>/dev/null; then
+  eval "$(direnv hook zsh)"
+fi
+
+# Navigation - word movement
 autoload -U select-word-style
 select-word-style shell
 
 bindkey "^[[1;3D" backward-word
 bindkey "^[[1;3C" forward-word
 
-function backward-slash-word() {
+# Path-based word movement
+backward-slash-word() {
   while [[ -n $LBUFFER && $LBUFFER != */ ]]; do
     zle backward-char
   done
@@ -33,7 +48,7 @@ function backward-slash-word() {
 }
 zle -N backward-slash-word
 
-function forward-slash-word() {
+forward-slash-word() {
   while [[ -n $RBUFFER && $RBUFFER != /* ]]; do
     zle forward-char
   done

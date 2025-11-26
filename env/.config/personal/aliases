@@ -1,9 +1,41 @@
+# Navigation
 alias ls="ls --color=auto"
 alias ll="ls -lah --color=auto"
+alias ..="cd .."
+alias ...="cd ../.."
 
-alias ipython='python -m IPython'
-alias dokcer='docker'
+# Editor
+alias vim="nvim"
+alias v="nvim"
+
+# Python
+alias py="python3"
+alias ipython="python3 -m IPython"
+alias venv="python3 -m venv"
+
+# Docker
+alias d="docker"
+alias dc="docker compose"
+alias dps="docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'"
+alias dlog="docker logs -f"
+alias dex="docker exec -it"
+alias dokcer="docker"  # typo fix
+
+# Git
+alias g="git"
+alias gs="git status -sb"
+alias gd="git diff"
+alias gl="git log --oneline -20"
+alias gp="git pull"
+
+# Tmux
+alias tmux="tmux -f ~/.config/tmux/tmux.conf"
+alias ta="tmux attach -t"
+alias tl="tmux list-sessions"
+
+# SSH
 alias had_session='eval $(ssh-agent) && ssh-add ~/.ssh/personal/hadhoryth'
 
-alias tmux='tmux -f ~/.config/tmux/tmux.conf'
-
+# Quick edit configs
+alias zshrc="$EDITOR ~/personal/.zshrc"
+alias nvimrc="$EDITOR ~/.config/nvim/init.lua"

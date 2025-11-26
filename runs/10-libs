@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+log() {
+  printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$*"
+}
+
+install() {
+  log "Installing $1"
+  if [[ "${OSTYPE:-}" == darwin* ]]; then
+    brew install "$1"
+  else
+    sudo apt install -y "$1"
+  fi
+}
+
+[[ "${OSTYPE:-}" != darwin* ]] && sudo apt update
+
+install curl
+install git
+install ripgrep
+install tree
+install direnv
+install unzip
+
+# fzf from source
+log "Cloning fzf"
+git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/personal/fzf" 2>/dev/null || true
+[[ -x "$HOME/personal/fzf/install" ]] && "$HOME/personal/fzf/install" --bin
+
+# fd (Ubuntu calls it fd-find)
+log "Installing fd"
+if [[ "${OSTYPE:-}" == darwin* ]]; then
+  brew install fd
+else
+  sudo apt install -y fd-find
+  mkdir -p "$HOME/.local/bin"
+  ln -sf /usr/bin/fdfind "$HOME/.local/bin/fd"
+fi
+
+log "Done"

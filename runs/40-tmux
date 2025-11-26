@@ -1,24 +1,33 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-tmux_plugins_dir=$HOME/personal/tmux/plugins
-tmux_sessions_dir=$HOME/personal/tmux/sessions
+OS="${OS:-${OSTYPE:-}}"
+
+have() { command -v "$1" &>/dev/null; }
+
+tmux_plugins_dir="$HOME/personal/tmux/plugins"
+tmux_sessions_dir="$HOME/personal/tmux/sessions"
+
 mkdir -p "$tmux_plugins_dir"
 mkdir -p "$tmux_sessions_dir"
 
-
-if ! command -v tmux &> /dev/null; then
-    if [[ "$OS" == darwin* ]]; then
-        brew install tmux
-    else
-        sudo apt update && sudo apt install -y tmux
-    fi
+if ! have tmux; then
+  echo "Installing tmux..."
+  if [[ "$OS" == darwin* ]]; then
+    brew install tmux
+  else
+    sudo apt update && sudo apt install -y tmux
+  fi
 fi
 
-if [ ! -d "${tmux_plugins_dir}/tpm" ]; then
-    git clone https://github.com/tmux-plugins/tpm "$tmux_plugins_dir/tpm"
+if [[ ! -d "${tmux_plugins_dir}/tpm" ]]; then
+  echo "Installing TPM..."
+  git clone https://github.com/tmux-plugins/tpm "$tmux_plugins_dir/tpm"
 fi
 
-if [ ! -d "$tmux_plugins_dir/resurrect" ]; then
-    git clone https://github.com/tmux-plugins/tmux-resurrect.git "$tmux_plugins_dir/resurrect"
+if [[ ! -d "$tmux_plugins_dir/resurrect" ]]; then
+  echo "Installing tmux-resurrect..."
+  git clone https://github.com/tmux-plugins/tmux-resurrect.git "$tmux_plugins_dir/resurrect"
 fi
 
+echo "tmux setup complete."

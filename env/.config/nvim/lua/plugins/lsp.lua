@@ -1,15 +1,22 @@
 return {
   { 'williamboman/mason.nvim', lazy = false, opts = {} },
+
   -- Autocompletion
   {
     'hrsh7th/nvim-cmp',
     event = 'InsertEnter',
+    dependencies = {
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-path',
+    },
     config = function()
       local cmp = require('cmp')
 
       cmp.setup({
         sources = {
-          {name = 'nvim_lsp'},
+          { name = 'nvim_lsp' },
+          { name = 'buffer' },
+          { name = 'path' },
         },
         mapping = cmp.mapping.preset.insert({
           ['<C-Space>'] = cmp.mapping.complete(),
@@ -25,93 +32,125 @@ return {
           end,
         },
       })
-    end
+    end,
   },
+
   -- LSP
   {
     'neovim/nvim-lspconfig',
-    cmd = {'LspInfo', 'LspInstall', 'LspStart'},
-    event = {'BufReadPre', 'BufNewFile'},
+    cmd = { 'LspInfo', 'LspInstall', 'LspStart' },
+    event = { 'BufReadPre', 'BufNewFile' },
     dependencies = {
-      {'hrsh7th/cmp-nvim-lsp'},
-      {'williamboman/mason.nvim'},
-      {'williamboman/mason-lspconfig.nvim'},
+      'hrsh7th/cmp-nvim-lsp',
+      'williamboman/mason.nvim',
+      'williamboman/mason-lspconfig.nvim',
     },
     init = function()
-      -- Reserve a space in the gutter
-      -- This will avoid an annoying layout shift in the screen
       vim.opt.signcolumn = 'yes'
     end,
     config = function()
-      local lsp_defaults = require('lspconfig').util.default_config
+      local lspconfig = require('lspconfig')
+      local lsp_defaults = lspconfig.util.default_config
 
-      -- Add cmp_nvim_lsp capabilities settings to lspconfig
-      -- This should be executed before you configure any language server
+      -- Add cmp capabilities
       lsp_defaults.capabilities = vim.tbl_deep_extend(
         'force',
         lsp_defaults.capabilities,
         require('cmp_nvim_lsp').default_capabilities()
       )
 
-      -- LspAttach is where you enable features that only work
-      -- if there is a language server active in the file
+      -- Keymaps on attach
       vim.api.nvim_create_autocmd('LspAttach', {
         desc = 'LSP actions',
         callback = function(event)
-          local opts = {buffer = event.buf}
+          local opts = { buffer = event.buf }
 
-          vim.keymap.set('n', 'K', '<cmd>lua vim.lsp.buf.hover()<cr>', opts)
-          vim.keymap.set('n', 'gd', '<cmd>lua vim.lsp.buf.definition()<cr>', opts)
-          vim.keymap.set('n', 'gD', '<cmd>lua vim.lsp.buf.declaration()<cr>', opts)
-          vim.keymap.set('n', 'gi', '<cmd>lua vim.lsp.buf.implementation()<cr>', opts)
-          vim.keymap.set('n', 'go', '<cmd>lua vim.lsp.buf.type_definition()<cr>', opts)
-          vim.keymap.set('n', 'gr', '<cmd>lua vim.lsp.buf.references()<cr>', opts)
-          vim.keymap.set('n', 'gs', '<cmd>lua vim.lsp.buf.signature_help()<cr>', opts)
-          vim.keymap.set('n', '<F2>', '<cmd>lua vim.lsp.buf.rename()<cr>', opts)
-          vim.keymap.set({'n', 'x'}, '<F3>', '<cmd>lua vim.lsp.buf.format({async = true})<cr>', opts)
-          vim.keymap.set('n', '<F4>', '<cmd>lua vim.lsp.buf.code_action()<cr>', opts)
+          vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+          vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+          vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
+          vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
+          vim.keymap.set('n', 'go', vim.lsp.buf.type_definition, opts)
+          vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+          vim.keymap.set('n', 'gs', vim.lsp.buf.signature_help, opts)
+          vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+          vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts)
+          vim.keymap.set({ 'n', 'x' }, '<leader>f', function()
+            vim.lsp.buf.format({ async = true })
+          end, opts)
         end,
       })
 
       -- Mason LSP setup
       require('mason-lspconfig').setup({
-        ensure_installed = { "ts_ls" }, 
+        ensure_installed = {
+          'pyright',           -- Python
+          'ts_ls',             -- TypeScript/JavaScript
+          'bashls',            -- Bash
+          'dockerls',          -- Dockerfile
+          'docker_compose_language_service', -- docker-compose
+          'jsonls',            -- JSON
+          'taplo',             -- TOML
+          'lua_ls',            -- Lua
+        },
         handlers = {
-          -- Custom handler for tsserver
-          ["ts_ls"] = function()
-            require("lspconfig").tsserver.setup({
-              on_attach = function(client, bufnr)
-                -- Disable formatting if you use Prettier/Biome/ESLint
-                client.server_capabilities.documentFormattingProvider = false
-              end,
+          -- Default handler
+          function(server_name)
+            lspconfig[server_name].setup({})
+          end,
+
+          -- Python
+          ['pyright'] = function()
+            lspconfig.pyright.setup({
               settings = {
-                typescript = {
-                  inlayHints = {
-                    includeInlayParameterNameHints = "all",
-                    includeInlayVariableTypeHints = true,
-                    includeInlayFunctionLikeReturnTypeHints = true,
-                    includeInlayPropertyDeclarationTypeHints = true,
-                  },
-                  suggest = { completeFunctionCalls = true },
-                },
-                javascript = {
-                  inlayHints = {
-                    includeInlayParameterNameHints = "all",
-                    includeInlayVariableTypeHints = true,
-                    includeInlayFunctionLikeReturnTypeHints = true,
-                    includeInlayPropertyDeclarationTypeHints = true,
+                python = {
+                  analysis = {
+                    typeCheckingMode = 'basic',
+                    autoImportCompletions = true,
                   },
                 },
               },
             })
           end,
 
-          -- Default handler for all other servers
-          function(server_name)
-            require("lspconfig")[server_name].setup({})
+          -- TypeScript
+          ['ts_ls'] = function()
+            lspconfig.ts_ls.setup({
+              settings = {
+                typescript = {
+                  inlayHints = {
+                    includeInlayParameterNameHints = 'all',
+                    includeInlayVariableTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                  },
+                },
+                javascript = {
+                  inlayHints = {
+                    includeInlayParameterNameHints = 'all',
+                    includeInlayVariableTypeHints = true,
+                  },
+                },
+              },
+            })
           end,
-        }
-      })    
-     end
-  }
+
+          -- Lua (for neovim config)
+          ['lua_ls'] = function()
+            lspconfig.lua_ls.setup({
+              settings = {
+                Lua = {
+                  runtime = { version = 'LuaJIT' },
+                  diagnostics = { globals = { 'vim' } },
+                  workspace = {
+                    library = vim.api.nvim_get_runtime_file('', true),
+                    checkThirdParty = false,
+                  },
+                  telemetry = { enable = false },
+                },
+              },
+            })
+          end,
+        },
+      })
+    end,
+  },
 }

@@ -1,43 +1,58 @@
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+local lazypath = vim.fn.stdpath('data') .. '/lazy/lazy.nvim'
 
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
-    "git",
-    "clone",
-    "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git",
-    "--branch=stable", -- latest stable release
+    'git',
+    'clone',
+    '--filter=blob:none',
+    'https://github.com/folke/lazy.nvim.git',
+    '--branch=stable',
     lazypath,
   })
 end
 
 vim.opt.rtp:prepend(lazypath)
 
-
-require("lazy").setup({
+require('lazy').setup({
   spec = {
-    { import = "plugins" },
+    { import = 'plugins' },
 
-    -- Theme plugin
+    -- Theme
     {
-      "catppuccin/nvim",
-      name = "catppuccin",
+      'catppuccin/nvim',
+      name = 'catppuccin',
       priority = 1000,
-      lazy = false, -- ensure it loads at startup
+      lazy = false,
       opts = {
-        flavour = "mocha", -- optional
-        custom_highlights = function(colors)
-          return {
-            -- Python import keyword (Treesitter group)
-            ["@module"] = { style = { "bold" } },
-          }
-        end,
+        flavour = 'mocha',
+        integrations = {
+          gitsigns = true,
+          mason = true,
+          cmp = true,
+          treesitter = true,
+          telescope = { enabled = true },
+        },
       },
       config = function(_, opts)
-        require("catppuccin").setup(opts)
-        vim.cmd.colorscheme("catppuccin")
+        require('catppuccin').setup(opts)
+        vim.cmd.colorscheme('catppuccin')
       end,
     },
   },
-  checker = { enabled = true },
+  checker = { enabled = false },
+  change_detection = { notify = false },
+  performance = {
+    rtp = {
+      disabled_plugins = {
+        'gzip',
+        'matchit',
+        'matchparen',
+        'netrwPlugin',
+        'tarPlugin',
+        'tohtml',
+        'tutor',
+        'zipPlugin',
+      },
+    },
+  },
 })

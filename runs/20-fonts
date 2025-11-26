@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+log() {
+  printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$*"
+}
+
+RELEASE="v3.4.0"
+NERD_FONTS_URL="https://github.com/ryanoasis/nerd-fonts/releases/download"
+
+FONTS=(
+  "BitstreamVeraSansMono.zip"
+  "FiraMono.zip"
+)
+
+if [[ "${OSTYPE:-}" == darwin* ]]; then
+  FONTS_DIR="$HOME/Library/Fonts"
+else
+  FONTS_DIR="$HOME/.local/share/fonts"
+fi
+
+mkdir -p "$FONTS_DIR"
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR"' EXIT
+
+log "Downloading Nerd Fonts $RELEASE"
+for font in "${FONTS[@]}"; do
+  curl -fsSL "${NERD_FONTS_URL}/${RELEASE}/${font}" -o "${TMPDIR}/${font}"
+  unzip -oq "${TMPDIR}/${font}" -d "$FONTS_DIR"
+done
+
+if [[ "${OSTYPE:-}" != darwin* ]] && command -v fc-cache &>/dev/null; then
+  fc-cache -fv >/dev/null 2>&1
+fi
+
+log "Done"

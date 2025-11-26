@@ -1,35 +1,66 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
+# OS Detection with override
+OS="${OSTYPE:-}"
 DRY_RUN=0
+
+usage() {
+  cat <<EOF
+Usage: ./run [OPTIONS]
+
+Options:
+  --mac       Force macOS mode
+  --linux     Force Linux mode
+  --dry, -n   Dry run (show what would be done)
+  --help, -h  Show this help
+EOF
+  exit 0
+}
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --mac)    OS="darwin"; shift ;;
+    --linux)  OS="linux-gnu"; shift ;;
     --dry|-n) DRY_RUN=1; shift ;;
-    *) echo "Unknown option: $1"; exit 1 ;;
+    --help|-h) usage ;;
+    *) echo "Unknown option: $1"; usage ;;
   esac
 done
+
+# Export for child scripts
+export OS DRY_RUN
 
 log() { printf '%s\n' "$*"; }
 dry() { [[ $DRY_RUN -eq 1 ]]; }
 run() { dry && printf '[DRY_RUN] %s\n' "$*" || "$@"; }
-
+is_mac() { [[ "$OS" == darwin* ]]; }
 
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 copy_config() {
   local config_dir="$HOME/.config"
-  local dev_config_dir="$script_dir/env/.config/"
+  local dev_config_dir="$script_dir/env/.config"
 
+  log "Copying config to $config_dir..."
   run mkdir -p "$config_dir"
-  run cp -r "$dev_config_dir" "$config_dir"
+  
+  # Copy each subdirectory explicitly to avoid nested .config
+  for dir in "$dev_config_dir"/*/; do
+    [[ -d "$dir" ]] && run cp -r "$dir" "$config_dir/"
+  done
 }
 
 copy_zsh_config() {
   local dest_dir="$HOME/personal"
   local src_dir="$script_dir/env"
 
+  log "Copying zsh config to $dest_dir..."
   run mkdir -p "$dest_dir"
-  run find "$src_dir" -type f -name ".*zsh*" -exec cp {} "$dest_dir" \; 
+  
+  for f in "$src_dir"/.*zsh* "$src_dir"/.p10k.zsh; do
+    [[ -f "$f" ]] && run cp "$f" "$dest_dir/"
+  done
 }
 
 run_executables() {
@@ -38,6 +69,7 @@ run_executables() {
   if [[ -d "$runs_dir" ]]; then
     for s in "$runs_dir"/*; do
       [[ -f "$s" && -x "$s" ]] || continue
+      log "Running: $(basename "$s")"
       run "$s"
     done
   else
@@ -45,11 +77,12 @@ run_executables() {
   fi
 }
 
+log "Detected OS: $OS"
 run_executables
 copy_config
 copy_zsh_config
 
 if ! dry; then
-  printf '\nActivate environment with:\n'
+  printf '\n✓ Done! Activate environment with:\n'
   printf '  source "%s/personal/.zshrc"\n' "$HOME"
 fi
