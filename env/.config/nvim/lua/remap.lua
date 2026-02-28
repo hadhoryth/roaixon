@@ -39,3 +39,21 @@ vim.keymap.set('n', '<C-k>', ':cprev<CR>zz', { desc = 'Prev quickfix', silent = 
 
 -- Search and replace word under cursor
 vim.keymap.set('n', '<leader>s', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = 'Replace word' })
+
+
+-- ==========================================
+-- BUILT-IN TERMINAL SETUP
+-- ==========================================
+
+-- 1. Open a terminal at the bottom with <leader>t
+vim.keymap.set('n', '<leader>t', ':botright split | resize 15 | term<CR>A', {
+    noremap = true,
+    silent = true,
+    desc = 'Open Terminal'
+})
+
+vim.keymap.set('t', '<Esc>', '<C-\\><C-n>', {
+    noremap = true,
+    silent = true,
+    desc = 'Exit terminal mode'
+})
