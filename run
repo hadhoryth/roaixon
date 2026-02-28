@@ -47,7 +47,7 @@ copy_config() {
   
   # Copy each subdirectory explicitly to avoid nested .config
   for dir in "$dev_config_dir"/*/; do
-    [[ -d "$dir" ]] && run cp -r "$dir" "$config_dir/"
+    [[ -d "$dir" ]] && run cp -r "${dir%/}" "$config_dir/"
   done
 }
 
