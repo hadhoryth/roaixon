@@ -7,7 +7,8 @@ source "$HOME/personal/oh-my-zsh/oh-my-zsh.sh"
 [[ -f "$HOME/personal/.p10k.zsh" ]] && source "$HOME/personal/.p10k.zsh"
 
 # Autocomplete (load before zsh_profile)
-[[ -d "$HOME/personal/autocomplete" ]] && source "$HOME/personal/autocomplete/zsh-autocomplete.plugin.zsh"
+autoload -Uz compinit && compinit
+[[ -d "$HOME/personal/zsh-autosuggestions" ]] && source "$HOME/personal/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
 # Personal profile
 [[ -f "$HOME/personal/.zsh_profile" ]] && source "$HOME/personal/.zsh_profile"

@@ -31,10 +31,10 @@ if [[ "$SHELL" != *zsh ]]; then
   fi
 fi
 
-AUTOCOMPLETE_DIR="$HOME/personal/autocomplete"
-if [[ ! -d "$AUTOCOMPLETE_DIR" ]]; then
-  log "Installing zsh-autocomplete"
-  git clone --depth 1 https://github.com/marlonrichert/zsh-autocomplete.git "$AUTOCOMPLETE_DIR"
+AUTOSUGGEST_DIR="$HOME/personal/zsh-autosuggestions"
+if [[ ! -d "$AUTOSUGGEST_DIR" ]]; then
+  log "Installing zsh-autosuggestions"
+  git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions "$AUTOSUGGEST_DIR"
 fi
 
 POWERLEVEL10K_DIR="$OHMYZSH_DIR/custom/themes/powerlevel10k"
