@@ -42,6 +42,12 @@ vim.opt.splitbelow = true
 -- Better completion
 vim.opt.completeopt = 'menuone,noselect'
 
+-- Folding (treesitter-based)
+vim.opt.foldmethod = 'expr'
+vim.opt.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+vim.opt.foldenable = false
+vim.opt.foldlevel = 99
+
 -- Allow project-local config
 vim.opt.exrc = true
 

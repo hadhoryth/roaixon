@@ -10,8 +10,14 @@ return {
         cpp = { "clang-format" },
       },
       formatters = {
+        stylua = {
+          prepend_args = { "--column-width", "110" },
+        },
+        ruff_format = {
+          prepend_args = { "--line-length", "110" },
+        },
         ["clang-format"] = {
-          prepend_args = { "-style=google" },
+          prepend_args = { "-style={BasedOnStyle: google, ColumnLimit: 110}" },
         },
       },
       format_on_save = {

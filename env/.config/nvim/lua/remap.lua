@@ -40,6 +40,8 @@ vim.keymap.set('n', '<C-k>', ':cprev<CR>zz', { desc = 'Prev quickfix', silent = 
 -- Search and replace word under cursor
 vim.keymap.set('n', '<leader>s', [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = 'Replace word' })
 
+-- Show diagnostic message in a floating window
+vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic error' })
 
 -- ==========================================
 -- BUILT-IN TERMINAL SETUP
