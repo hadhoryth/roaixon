@@ -24,9 +24,10 @@ install direnv
 install unzip
 
 # Build toolchain (treesitter parsers, telescope-fzf-native) and
-# pip/venv for mason-managed tools (ruff, clang-format)
+# pip/venv for mason-managed tools (ruff, clang-format). clangd comes from the
+# distro because mason ships no aarch64 Linux clangd release (fails on DGX).
 if ! is_mac; then
-  sudo apt install -y build-essential python3-pip python3-venv
+  sudo apt install -y build-essential python3-pip python3-venv clangd
 fi
 
 # fzf from source

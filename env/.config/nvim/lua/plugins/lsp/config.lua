@@ -72,9 +72,15 @@ return {
             end
             pcall(vim.keymap.del, 'x', 'gra')
 
-            -- Mason installs the servers; mason-lspconfig v2 auto-enables them
+            -- Mason installs the servers; mason-lspconfig v2 auto-enables them.
+            -- clangd is skipped on Linux (installed via the distro instead) as
+            -- mason has no aarch64 Linux build; it stays mason-managed on macOS.
+            local ensure_installed = { 'lua_ls', 'ruff' }
+            if vim.uv.os_uname().sysname ~= 'Linux' then
+                table.insert(ensure_installed, 'clangd')
+            end
             require('mason-lspconfig').setup({
-                ensure_installed = { 'lua_ls', 'clangd', 'ruff' },
+                ensure_installed = ensure_installed,
             })
         end,
     },
