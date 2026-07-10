@@ -15,7 +15,17 @@ if is_mac; then
     brew install neovim
   fi
 else
-  if ! command -v nvim &>/dev/null && [[ ! -x "$HOME/.local/bin/nvim" ]]; then
+  # Always provide our pinned neovim at ~/.local/bin/nvim, which .zsh_profile
+  # puts ahead of any distro nvim (e.g. /usr/local/bin/nvim on DGX). Relying on
+  # a pre-existing system nvim breaks nvim-treesitter (master branch) with
+  # "attempt to call method 'range' (a nil value)".
+  nvim_bin="$HOME/.local/bin/nvim"
+  installed_version=""
+  if [[ -x "$nvim_bin" ]]; then
+    installed_version="$("$nvim_bin" --version 2>/dev/null | awk 'NR==1{print $2}')"
+  fi
+
+  if [[ "$installed_version" != "$NVIM_VERSION" ]]; then
     case "$(uname -m)" in
       x86_64)        arch="x86_64" ;;
       aarch64|arm64) arch="arm64" ;;
@@ -35,8 +45,10 @@ else
     tar -xzf "$tmpdir/$tarball" -C "$nvim_dir" --strip-components=1
 
     mkdir -p "$HOME/.local/bin"
-    ln -sf "$nvim_dir/bin/nvim" "$HOME/.local/bin/nvim"
-    log "neovim installed to ~/.local/bin/nvim"
+    ln -sf "$nvim_dir/bin/nvim" "$nvim_bin"
+    log "neovim ${NVIM_VERSION} installed to $nvim_bin"
+  else
+    log "neovim ${NVIM_VERSION} already present at $nvim_bin"
   fi
 fi
 
