@@ -5,6 +5,8 @@ log() {
   printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$*"
 }
 
+is_mac() { [[ "${OS:-${OSTYPE:-}}" == darwin* ]]; }
+
 RELEASE="v3.4.0"
 NERD_FONTS_URL="https://github.com/ryanoasis/nerd-fonts/releases/download"
 
@@ -13,23 +15,33 @@ FONTS=(
   "FiraMono.zip"
 )
 
-if [[ "${OSTYPE:-}" == darwin* ]]; then
+if is_mac; then
   FONTS_DIR="$HOME/Library/Fonts"
 else
   FONTS_DIR="$HOME/.local/share/fonts"
 fi
 
+if compgen -G "$FONTS_DIR/BitstromWera*" >/dev/null && compgen -G "$FONTS_DIR/FiraMono*" >/dev/null; then
+  log "Nerd Fonts already installed (skipping)"
+  exit 0
+fi
+
 mkdir -p "$FONTS_DIR"
-TMPDIR="$(mktemp -d)"
-trap 'rm -rf "$TMPDIR"' EXIT
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
 
 log "Downloading Nerd Fonts $RELEASE"
 for font in "${FONTS[@]}"; do
-  curl -fsSL "${NERD_FONTS_URL}/${RELEASE}/${font}" -o "${TMPDIR}/${font}"
-  unzip -oq "${TMPDIR}/${font}" -d "$FONTS_DIR"
+  curl -fsSL "${NERD_FONTS_URL}/${RELEASE}/${font}" -o "${tmpdir}/${font}"
+  # exit 11 = a pattern matched nothing (zips ship either ttf or otf) - fine
+  status=0
+  unzip -oq "${tmpdir}/${font}" -d "$FONTS_DIR" '*.ttf' '*.otf' || status=$?
+  if [[ $status -ne 0 && $status -ne 11 ]]; then
+    exit "$status"
+  fi
 done
 
-if [[ "${OSTYPE:-}" != darwin* ]] && command -v fc-cache &>/dev/null; then
+if ! is_mac && command -v fc-cache &>/dev/null; then
   fc-cache -fv >/dev/null 2>&1
 fi
 

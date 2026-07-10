@@ -1,5 +1,7 @@
 return {
     'nvim-treesitter/nvim-treesitter',
+    -- This config uses the legacy API; the rewritten 'main' branch is incompatible
+    branch = 'master',
     build = ':TSUpdate',
     event = { 'BufReadPost', 'BufNewFile' },
     opts = {

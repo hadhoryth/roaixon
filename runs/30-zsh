@@ -6,41 +6,56 @@ log() {
 }
 
 have() { command -v "$1" &>/dev/null; }
+is_mac() { [[ "${OS:-${OSTYPE:-}}" == darwin* ]]; }
+
+clone_or_update() {
+  local url="$1" dir="$2"
+  if [[ ! -d "$dir" ]]; then
+    git clone --depth 1 "$url" "$dir"
+  else
+    git -C "$dir" pull --ff-only || true
+  fi
+}
 
 if ! have zsh; then
   log "Installing zsh"
-  if [[ "${OSTYPE:-}" == darwin* ]]; then
+  if is_mac; then
     brew install zsh
   else
-    sudo apt update && sudo apt install -y zsh
+    sudo apt install -y zsh
   fi
 fi
 
 OHMYZSH_DIR="$HOME/personal/oh-my-zsh"
 if [[ ! -d "$OHMYZSH_DIR" ]]; then
   log "Installing Oh My Zsh"
-  ZSH="$OHMYZSH_DIR" RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-fi
-
-if [[ "$SHELL" != *zsh ]]; then
-  log "Setting zsh as default shell"
-  if [[ "${OSTYPE:-}" == darwin* ]]; then
-    chsh -s "$(which zsh)"
-  else
-    sudo chsh -s "$(which zsh)" "$(whoami)"
+  had_zshrc=0
+  [[ -e "$HOME/.zshrc" || -h "$HOME/.zshrc" ]] && had_zshrc=1
+  # KEEP_ZSHRC protects an existing ~/.zshrc from being replaced
+  ZSH="$OHMYZSH_DIR" RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  # ...but omz still creates a template when none exists; config lives in
+  # ~/personal and activation is a manual `source ~/personal/.zshrc`
+  if [[ $had_zshrc -eq 0 && -f "$HOME/.zshrc" ]]; then
+    rm -f "$HOME/.zshrc"
   fi
 fi
 
-AUTOSUGGEST_DIR="$HOME/personal/zsh-autosuggestions"
-if [[ ! -d "$AUTOSUGGEST_DIR" ]]; then
-  log "Installing zsh-autosuggestions"
-  git clone --depth 1 https://github.com/zsh-users/zsh-autosuggestions "$AUTOSUGGEST_DIR"
+if [[ "${SHELL:-}" != *zsh ]]; then
+  zsh_path="$(command -v zsh)"
+  if ! grep -qx "$zsh_path" /etc/shells; then
+    log "Adding $zsh_path to /etc/shells"
+    echo "$zsh_path" | sudo tee -a /etc/shells >/dev/null
+  fi
+  log "Setting zsh as default shell"
+  if is_mac; then
+    chsh -s "$zsh_path"
+  else
+    sudo chsh -s "$zsh_path" "$(whoami)"
+  fi
 fi
 
-POWERLEVEL10K_DIR="$OHMYZSH_DIR/custom/themes/powerlevel10k"
-if [[ ! -d "$POWERLEVEL10K_DIR" ]]; then
-  log "Installing Powerlevel10k"
-  git clone --depth 1 https://github.com/romkatv/powerlevel10k.git "$POWERLEVEL10K_DIR"
-fi
+log "Installing zsh plugins"
+clone_or_update https://github.com/zsh-users/zsh-autosuggestions "$HOME/personal/zsh-autosuggestions"
+clone_or_update https://github.com/romkatv/powerlevel10k.git "$OHMYZSH_DIR/custom/themes/powerlevel10k"
 
 log "Done"

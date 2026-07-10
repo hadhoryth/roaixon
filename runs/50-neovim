@@ -5,28 +5,38 @@ log() {
   printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$*"
 }
 
-[[ "${OSTYPE:-}" != darwin* ]] && sudo apt update
+is_mac() { [[ "${OS:-${OSTYPE:-}}" == darwin* ]]; }
 
-if [[ "${OSTYPE:-}" == darwin* ]]; then
+NVIM_VERSION="v0.12.3"
+
+if is_mac; then
   if ! command -v nvim &>/dev/null; then
     log "Installing neovim"
     brew install neovim
   fi
 else
-  if ! command -v nvim &>/dev/null; then
-    log "Installing neovim build dependencies"
-    sudo apt install -y cmake gettext lua5.1 liblua5.1-0-dev build-essential git ninja-build
+  if ! command -v nvim &>/dev/null && [[ ! -x "$HOME/.local/bin/nvim" ]]; then
+    case "$(uname -m)" in
+      x86_64)        arch="x86_64" ;;
+      aarch64|arm64) arch="arm64" ;;
+      *) log "Unsupported architecture: $(uname -m)"; exit 1 ;;
+    esac
+    tarball="nvim-linux-${arch}.tar.gz"
+    url="https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/${tarball}"
+
+    log "Downloading neovim ${NVIM_VERSION} (${arch})"
+    tmpdir="$(mktemp -d)"
+    trap 'rm -rf "$tmpdir"' EXIT
+    curl -fsSL "$url" -o "$tmpdir/$tarball"
 
     nvim_dir="$HOME/personal/nvim"
-    mkdir -p "$(dirname "$nvim_dir")"
+    rm -rf "$nvim_dir"
+    mkdir -p "$nvim_dir"
+    tar -xzf "$tmpdir/$tarball" -C "$nvim_dir" --strip-components=1
 
-    if [[ ! -d "$nvim_dir" ]]; then
-      log "Cloning neovim"
-      git clone https://github.com/neovim/neovim.git "$nvim_dir" 2>/dev/null || true
-    fi
-
-    log "Building neovim"
-    (cd "$nvim_dir" && git checkout stable && make CMAKE_BUILD_TYPE=RelWithDebInfo -j"$(nproc)" && sudo make install)
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$nvim_dir/bin/nvim" "$HOME/.local/bin/nvim"
+    log "neovim installed to ~/.local/bin/nvim"
   fi
 fi
 

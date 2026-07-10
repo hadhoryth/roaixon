@@ -53,7 +53,8 @@ return {
       },
     })
 
-    telescope.load_extension('fzf')
+    -- fzf-native needs make+cc at build time; degrade gracefully if it failed
+    pcall(telescope.load_extension, 'fzf')
 
     -- Config editing shortcuts
     vim.keymap.set('n', '<leader>en', function()

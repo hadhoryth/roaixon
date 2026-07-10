@@ -1,9 +1,20 @@
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-export TERM=xterm-256color
 
 export XDG_CONFIG_HOME="$HOME/.config"
 export EDITOR="nvim"
+
+# Homebrew (Apple Silicon installs outside the default PATH)
+for brew_bin in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+  if [[ -x "$brew_bin" ]]; then
+    eval "$("$brew_bin" shellenv)"
+    break
+  fi
+done
+unset brew_bin
+
+# Local binaries (fd shim and nvim tarball on Linux)
+[[ ":$PATH:" != *":$HOME/.local/bin:"* ]] && export PATH="$HOME/.local/bin:$PATH"
 
 # Source personal configs
 PERSONAL="$XDG_CONFIG_HOME/personal"

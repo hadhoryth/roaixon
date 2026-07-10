@@ -1,13 +1,17 @@
+# Powerlevel10k instant prompt. Keep at the very top of the file.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+export ZSH="$HOME/personal/oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
-# Oh My Zsh
-source "$HOME/personal/oh-my-zsh/oh-my-zsh.sh"
+# Oh My Zsh (also runs compinit)
+source "$ZSH/oh-my-zsh.sh"
 
 # Powerlevel10k config
 [[ -f "$HOME/personal/.p10k.zsh" ]] && source "$HOME/personal/.p10k.zsh"
 
-# Autocomplete (load before zsh_profile)
-autoload -Uz compinit && compinit
 [[ -d "$HOME/personal/zsh-autosuggestions" ]] && source "$HOME/personal/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
 # Personal profile

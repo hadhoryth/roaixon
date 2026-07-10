@@ -33,10 +33,37 @@ export OS DRY_RUN
 
 log() { printf '%s\n' "$*"; }
 dry() { [[ $DRY_RUN -eq 1 ]]; }
-run() { dry && printf '[DRY_RUN] %s\n' "$*" || "$@"; }
+run() {
+  if dry; then
+    printf '[DRY_RUN] %s\n' "$*"
+  else
+    "$@"
+  fi
+}
 is_mac() { [[ "$OS" == darwin* ]]; }
 
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+install_brew() {
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+}
+
+prereqs() {
+  if is_mac; then
+    if [[ ! -x /opt/homebrew/bin/brew && ! -x /usr/local/bin/brew ]]; then
+      log "Installing Homebrew..."
+      run install_brew
+    fi
+    # Put brew on PATH for this run and every child script
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+      eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+      eval "$(/usr/local/bin/brew shellenv)"
+    fi
+  else
+    run sudo apt-get update
+  fi
+}
 
 copy_config() {
   local config_dir="$HOME/.config"
@@ -44,10 +71,25 @@ copy_config() {
 
   log "Copying config to $config_dir..."
   run mkdir -p "$config_dir"
-  
-  # Copy each subdirectory explicitly to avoid nested .config
+
+  # Copy each subdirectory explicitly to avoid nested .config.
+  # Existing non-roaixon configs are backed up once to <dir>.pre-roaixon;
+  # after that each run replaces the dir so stale files never linger.
   for dir in "$dev_config_dir"/*/; do
-    [[ -d "$dir" ]] && run cp -r "${dir%/}" "$config_dir/"
+    [[ -d "$dir" ]] || continue
+    local name target backup
+    name="$(basename "${dir%/}")"
+    target="$config_dir/$name"
+    backup="$target.pre-roaixon"
+    if [[ -d "$target" ]]; then
+      if [[ ! -e "$backup" ]]; then
+        log "Backing up $target -> $backup"
+        run mv "$target" "$backup"
+      else
+        run rm -rf "$target"
+      fi
+    fi
+    run cp -r "${dir%/}" "$config_dir/"
   done
 }
 
@@ -57,8 +99,8 @@ copy_zsh_config() {
 
   log "Copying zsh config to $dest_dir..."
   run mkdir -p "$dest_dir"
-  
-  for f in "$src_dir"/.*zsh* "$src_dir"/.p10k.zsh; do
+
+  for f in "$src_dir"/.*zsh*; do
     [[ -f "$f" ]] && run cp "$f" "$dest_dir/"
   done
 }
@@ -78,9 +120,10 @@ run_executables() {
 }
 
 log "Detected OS: $OS"
-run_executables
+prereqs
 copy_config
 copy_zsh_config
+run_executables
 
 if ! dry; then
   printf '\n✓ Done! Activate environment with:\n'

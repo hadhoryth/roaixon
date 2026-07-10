@@ -5,16 +5,16 @@ log() {
   printf "[%s] %s\n" "$(date '+%H:%M:%S')" "$*"
 }
 
+is_mac() { [[ "${OS:-${OSTYPE:-}}" == darwin* ]]; }
+
 install() {
   log "Installing $1"
-  if [[ "${OSTYPE:-}" == darwin* ]]; then
+  if is_mac; then
     brew install "$1"
   else
     sudo apt install -y "$1"
   fi
 }
-
-[[ "${OSTYPE:-}" != darwin* ]] && sudo apt update
 
 install curl
 install git
@@ -23,14 +23,25 @@ install tree
 install direnv
 install unzip
 
+# Build toolchain (treesitter parsers, telescope-fzf-native) and
+# pip/venv for mason-managed tools (ruff, clang-format)
+if ! is_mac; then
+  sudo apt install -y build-essential python3-pip python3-venv
+fi
+
 # fzf from source
-log "Cloning fzf"
-git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/personal/fzf" 2>/dev/null || true
-[[ -x "$HOME/personal/fzf/install" ]] && "$HOME/personal/fzf/install" --bin
+fzf_dir="$HOME/personal/fzf"
+if [[ ! -d "$fzf_dir" ]]; then
+  log "Cloning fzf"
+  git clone --depth 1 https://github.com/junegunn/fzf.git "$fzf_dir"
+else
+  git -C "$fzf_dir" pull --ff-only || true
+fi
+"$fzf_dir/install" --bin
 
 # fd (Ubuntu calls it fd-find)
 log "Installing fd"
-if [[ "${OSTYPE:-}" == darwin* ]]; then
+if is_mac; then
   brew install fd
 else
   sudo apt install -y fd-find

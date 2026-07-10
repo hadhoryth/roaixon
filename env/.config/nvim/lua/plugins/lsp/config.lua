@@ -5,20 +5,46 @@ return {
         event = { 'BufReadPre', 'BufNewFile' },
         dependencies = {
             'hrsh7th/cmp-nvim-lsp',
-            'williamboman/mason.nvim',
-            'williamboman/mason-lspconfig.nvim',
+            'mason-org/mason.nvim',
+            'mason-org/mason-lspconfig.nvim',
         },
         init = function()
             -- Show the sign column (where icons for errors appear) by default
             vim.opt.signcolumn = 'yes'
         end,
         config = function()
-            local lspconfig = require('lspconfig')
-            local capabilities = require('cmp_nvim_lsp').default_capabilities()
+            -- Completion capabilities for every server
+            vim.lsp.config('*', {
+                capabilities = require('cmp_nvim_lsp').default_capabilities(),
+            })
 
-            -- Fix for clangd "multiple different client offset_encodings" warning
-            local clangd_capabilities = vim.tbl_deep_extend('force', capabilities, {
-                offsetEncoding = { 'utf-16' },
+            -- C/C++: Optimized Clangd
+            vim.lsp.config('clangd', {
+                cmd = {
+                    'clangd',
+                    '--background-index',
+                    '--clang-tidy',
+                    '--header-insertion=iwyu',
+                    '--completion-style=detailed',
+                    '--j=4',
+                },
+                -- utf-16 avoids "multiple different client offset_encodings"
+                capabilities = { offsetEncoding = { 'utf-16' } },
+                -- Disable formatting so it doesn't fight with Conform
+                on_attach = function(client)
+                    client.server_capabilities.documentFormattingProvider = false
+                    client.server_capabilities.documentRangeFormattingProvider = false
+                end,
+            })
+
+            -- Lua: Configured for Neovim development
+            vim.lsp.config('lua_ls', {
+                settings = {
+                    Lua = {
+                        diagnostics = { globals = { 'vim' } },
+                        workspace = { checkThirdParty = false },
+                    },
+                },
             })
 
             -- Keymaps: Only active when an LSP is attached to a buffer
@@ -37,69 +63,18 @@ return {
                     -- Actions
                     vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
                     vim.keymap.set({ 'n', 'x' }, '<leader>ca', vim.lsp.buf.code_action, opts)
-
-                    -- Formatting (Using Conform.nvim)
-                    vim.keymap.set({ 'n', 'x' }, '<leader>f', function()
-                        require("conform").format({ async = true, lsp_fallback = true })
-                    end, opts)
                 end,
             })
 
+            -- Remove the 0.11 default gr-prefixed maps so bare gr stays instant
+            for _, lhs in ipairs({ 'grr', 'grn', 'gra', 'gri', 'grt' }) do
+                pcall(vim.keymap.del, 'n', lhs)
+            end
+            pcall(vim.keymap.del, 'x', 'gra')
+
+            -- Mason installs the servers; mason-lspconfig v2 auto-enables them
             require('mason-lspconfig').setup({
-                ensure_installed = {
-                    'pyright', 'ruff', 'bashls',
-                    'dockerls', 'jsonls', 'lua_ls', 'clangd'
-                },
-                handlers = {
-                    -- Default handler for all servers
-                    function(server_name)
-                        lspconfig[server_name].setup({ capabilities = capabilities })
-                    end,
-
-                    -- Python: Pyright (Logic) + Ruff (Linting/Style)
-                    ['pyright'] = function()
-                        lspconfig.pyright.setup({
-                            capabilities = capabilities,
-                            settings = {
-                                pyright = { disableOrganizeImports = true },
-                                python = { analysis = { ignore = { '*' }, typeCheckingMode = 'basic' } },
-                            },
-                        })
-                    end,
-
-                    -- C/C++: Optimized Clangd
-                    ['clangd'] = function()
-                        lspconfig.clangd.setup({
-                            capabilities = clangd_capabilities,
-                            cmd = {
-                                'clangd',
-                                '--background-index',
-                                '--clang-tidy',
-                                '--header-insertion=iwyu',
-                                '--completion-style=detailed',
-                                '--j=4',
-                            },
-                            -- Disable formatting so it doesn't fight with Conform
-                            on_attach = function(client)
-                                client.server_capabilities.documentFormattingProvider = false
-                                client.server_capabilities.documentRangeFormattingProvider = false
-                            end,
-                        })
-                    end,
-
-                    -- Lua: Configured for Neovim development
-                    ['lua_ls'] = function()
-                        lspconfig.lua_ls.setup({
-                            capabilities = capabilities,
-                            settings = {
-                                Lua = {
-                                    diagnostics = { globals = { 'vim' } },
-                                    workspace = { checkThirdParty = false },
-                                },
-                            },
-                        })
-                    end,
-                },
+                ensure_installed = { 'lua_ls', 'clangd', 'ruff' },
             })
         end,
     },

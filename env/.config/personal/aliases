@@ -1,6 +1,11 @@
-# Navigation
-alias ls="ls --color=auto"
-alias ll="ls -lah --color=auto"
+# Navigation (GNU ls has --color, BSD ls on macOS uses -G)
+if ls --color=auto >/dev/null 2>&1; then
+  alias ls="ls --color=auto"
+  alias ll="ls -lah --color=auto"
+else
+  alias ls="ls -G"
+  alias ll="ls -lahG"
+fi
 alias ..="cd .."
 alias ...="cd ../.."
 

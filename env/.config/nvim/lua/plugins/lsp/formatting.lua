@@ -1,7 +1,25 @@
 return {
   {
+    'WhoIsSethDaniel/mason-tool-installer.nvim',
+    dependencies = { 'mason-org/mason.nvim' },
+    event = 'VeryLazy',
+    opts = {
+      ensure_installed = { 'stylua', 'clang-format' },
+    },
+  },
+  {
     'stevearc/conform.nvim',
     event = { "BufWritePre" },
+    keys = {
+      {
+        '<leader>f',
+        function()
+          require('conform').format({ async = true, lsp_fallback = true })
+        end,
+        mode = { 'n', 'x' },
+        desc = 'Format buffer',
+      },
+    },
     opts = {
       formatters_by_ft = {
         lua = { "stylua" },
