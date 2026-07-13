@@ -15,7 +15,14 @@ if is_mac; then
     brew install neovim
   fi
 else
-  if ! command -v nvim &>/dev/null && [[ ! -x "$HOME/.local/bin/nvim" ]]; then
+  # Install our pinned version unless the resolved nvim already matches it.
+  # A pre-existing/stale nvim (e.g. a system dev build) must NOT make us skip:
+  # it may report as the right major.minor yet lack options newer plugins need.
+  have="$(command -v nvim &>/dev/null && nvim --version 2>/dev/null | head -1 | awk '{print $2}' || true)"
+  if [[ "$have" == "$NVIM_VERSION" ]]; then
+    log "neovim ${NVIM_VERSION} already installed"
+  else
+    [[ -n "$have" ]] && log "found nvim ${have}, installing pinned ${NVIM_VERSION}"
     case "$(uname -m)" in
       x86_64)        arch="x86_64" ;;
       aarch64|arm64) arch="arm64" ;;

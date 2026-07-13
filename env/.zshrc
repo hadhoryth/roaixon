@@ -6,6 +6,11 @@ fi
 export ZSH="$HOME/personal/oh-my-zsh"
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
+# Disable Oh My Zsh's self-update: its update check/prompt writes to the
+# console during startup, which breaks Powerlevel10k's instant prompt.
+# Versions are managed by the setup script (runs/30-zsh), not by OMZ itself.
+zstyle ':omz:update' mode disabled
+
 # Oh My Zsh (also runs compinit)
 source "$ZSH/oh-my-zsh.sh"
 
