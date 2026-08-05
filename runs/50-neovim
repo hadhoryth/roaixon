@@ -7,44 +7,43 @@ log() {
 
 is_mac() { [[ "${OS:-${OSTYPE:-}}" == darwin* ]]; }
 
-NVIM_VERSION="v0.12.3"
+NVIM_VERSION="v0.12.4"
 
-if is_mac; then
-  if ! command -v nvim &>/dev/null; then
-    log "Installing neovim"
-    brew install neovim
-  fi
+# Install our pinned version unless the resolved nvim already matches it.
+# A pre-existing/stale nvim (e.g. a system dev build) must NOT make us skip:
+# it may report as the right major.minor yet lack options newer plugins need.
+have="$(command -v nvim &>/dev/null && nvim --version 2>/dev/null | head -1 | awk '{print $2}' || true)"
+if [[ "$have" == "$NVIM_VERSION" ]]; then
+  log "neovim ${NVIM_VERSION} already installed"
 else
-  # Install our pinned version unless the resolved nvim already matches it.
-  # A pre-existing/stale nvim (e.g. a system dev build) must NOT make us skip:
-  # it may report as the right major.minor yet lack options newer plugins need.
-  have="$(command -v nvim &>/dev/null && nvim --version 2>/dev/null | head -1 | awk '{print $2}' || true)"
-  if [[ "$have" == "$NVIM_VERSION" ]]; then
-    log "neovim ${NVIM_VERSION} already installed"
+  [[ -n "$have" ]] && log "found nvim ${have}, installing pinned ${NVIM_VERSION}"
+  case "$(uname -m)" in
+    x86_64)        arch="x86_64" ;;
+    aarch64|arm64) arch="arm64" ;;
+    *) log "Unsupported architecture: $(uname -m)"; exit 1 ;;
+  esac
+  if is_mac; then
+    tarball="nvim-macos-${arch}.tar.gz"
   else
-    [[ -n "$have" ]] && log "found nvim ${have}, installing pinned ${NVIM_VERSION}"
-    case "$(uname -m)" in
-      x86_64)        arch="x86_64" ;;
-      aarch64|arm64) arch="arm64" ;;
-      *) log "Unsupported architecture: $(uname -m)"; exit 1 ;;
-    esac
     tarball="nvim-linux-${arch}.tar.gz"
-    url="https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/${tarball}"
-
-    log "Downloading neovim ${NVIM_VERSION} (${arch})"
-    tmpdir="$(mktemp -d)"
-    trap 'rm -rf "$tmpdir"' EXIT
-    curl -fsSL "$url" -o "$tmpdir/$tarball"
-
-    nvim_dir="$HOME/personal/nvim"
-    rm -rf "$nvim_dir"
-    mkdir -p "$nvim_dir"
-    tar -xzf "$tmpdir/$tarball" -C "$nvim_dir" --strip-components=1
-
-    mkdir -p "$HOME/.local/bin"
-    ln -sf "$nvim_dir/bin/nvim" "$HOME/.local/bin/nvim"
-    log "neovim installed to ~/.local/bin/nvim"
   fi
+  url="https://github.com/neovim/neovim/releases/download/${NVIM_VERSION}/${tarball}"
+
+  log "Downloading neovim ${NVIM_VERSION} (${arch})"
+  tmpdir="$(mktemp -d)"
+  trap 'rm -rf "$tmpdir"' EXIT
+  curl -fsSL "$url" -o "$tmpdir/$tarball"
+
+  nvim_dir="$HOME/personal/nvim"
+  rm -rf "$nvim_dir"
+  mkdir -p "$nvim_dir"
+  tar -xzf "$tmpdir/$tarball" -C "$nvim_dir" --strip-components=1
+  # Release binaries are unsigned; drop quarantine so Gatekeeper doesn't block them.
+  is_mac && xattr -rc "$nvim_dir" 2>/dev/null || true
+
+  mkdir -p "$HOME/.local/bin"
+  ln -sf "$nvim_dir/bin/nvim" "$HOME/.local/bin/nvim"
+  log "neovim installed to ~/.local/bin/nvim"
 fi
 
 log "Done"
