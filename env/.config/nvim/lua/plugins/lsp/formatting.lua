@@ -35,7 +35,7 @@ return {
           prepend_args = { "--line-length", "110" },
         },
         ["clang-format"] = {
-          prepend_args = { "-style={BasedOnStyle: google, ColumnLimit: 110}" },
+          prepend_args = { "-style={BasedOnStyle: google, ColumnLimit: 110, IndentWidth: 4}" },
         },
       },
       format_on_save = {

@@ -45,7 +45,8 @@ return {
             end,
             additional_vim_regex_highlighting = { 'markdown' },
         },
-        indent = { enable = true },
+        -- Treesitter indent misfires on incomplete C lines; cindent handles them better
+        indent = { enable = true, disable = { 'c', 'cpp' } },
     },
     config = function(_, opts)
         require('nvim-treesitter.configs').setup(opts)
