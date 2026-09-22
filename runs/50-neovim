@@ -46,4 +46,32 @@ else
   log "neovim installed to ~/.local/bin/nvim"
 fi
 
+# The Neovim 0.12 treesitter plugin uses the CLI to build every parser.
+TREE_SITTER_VERSION="0.27.0"
+have_ts="$(tree-sitter --version 2>/dev/null | awk '{print $2}' || true)"
+if [[ "$have_ts" == "$TREE_SITTER_VERSION" ]]; then
+  log "tree-sitter ${TREE_SITTER_VERSION} already installed"
+else
+  case "$(uname -m)" in
+    x86_64)        ts_arch="x64" ;;
+    aarch64|arm64) ts_arch="arm64" ;;
+    *) log "Unsupported architecture: $(uname -m)"; exit 1 ;;
+  esac
+  if is_mac; then
+    ts_os="macos"
+  else
+    ts_os="linux"
+  fi
+  ts_tmpdir="$(mktemp -d)"
+  trap 'rm -rf "${tmpdir:-}" "$ts_tmpdir"' EXIT
+  log "Downloading tree-sitter ${TREE_SITTER_VERSION} (${ts_arch})"
+  curl -fsSL "https://github.com/tree-sitter/tree-sitter/releases/download/v${TREE_SITTER_VERSION}/tree-sitter-${ts_os}-${ts_arch}.gz" -o "$ts_tmpdir/tree-sitter.gz"
+  gzip -dc "$ts_tmpdir/tree-sitter.gz" > "$ts_tmpdir/tree-sitter"
+  chmod +x "$ts_tmpdir/tree-sitter"
+  mkdir -p "$HOME/.local/bin"
+  mv "$ts_tmpdir/tree-sitter" "$HOME/.local/bin/tree-sitter"
+  "$HOME/.local/bin/tree-sitter" --version
+  log "tree-sitter installed to ~/.local/bin/tree-sitter"
+fi
+
 log "Done"

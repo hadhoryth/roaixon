@@ -1,9 +1,9 @@
 return {
     'nvim-treesitter/nvim-treesitter',
-    -- This config uses the legacy API; the rewritten 'main' branch is incompatible
-    branch = 'master',
+    -- Neovim 0.12 requires the rewritten API on main.
+    branch = 'main',
+    lazy = false,
     build = ':TSUpdate',
-    event = { 'BufReadPost', 'BufNewFile' },
     opts = {
         ensure_installed = {
             -- Core
@@ -32,23 +32,59 @@ return {
             'html',
             'css',
         },
-        auto_install = true,
-        highlight = {
-            enable = true,
-            disable = function(_, buf)
-                local max_filesize = 100 * 1024 -- 100 KB
-                local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
-                if ok and stats and stats.size > max_filesize then
-                    vim.notify('Treesitter disabled for large file', vim.log.levels.WARN)
-                    return true
-                end
-            end,
-            additional_vim_regex_highlighting = { 'markdown' },
-        },
-        -- Treesitter indent misfires on incomplete C lines; cindent handles them better
-        indent = { enable = true, disable = { 'c', 'cpp' } },
     },
     config = function(_, opts)
-        require('nvim-treesitter.configs').setup(opts)
+        local treesitter = require('nvim-treesitter')
+        treesitter.setup({})
+
+        local function attach(buf, lang)
+            if not vim.api.nvim_buf_is_valid(buf) or not vim.api.nvim_buf_is_loaded(buf) then
+                return
+            end
+            local ft = vim.bo[buf].filetype
+            if vim.treesitter.language.get_lang(ft) ~= lang then
+                return
+            end
+            local stats = vim.uv.fs_stat(vim.api.nvim_buf_get_name(buf))
+            if stats and stats.size > 100 * 1024 then
+                vim.treesitter.stop(buf)
+                return
+            end
+            vim.treesitter.start(buf, lang)
+            if ft == 'markdown' then
+                vim.bo[buf].syntax = 'markdown'
+            end
+            -- Treesitter indent misfires on incomplete C lines; keep native indentation.
+            if ft ~= 'c' and ft ~= 'cpp' then
+                vim.bo[buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+            end
+        end
+
+        local has_cli = vim.fn.executable('tree-sitter') == 1
+        if has_cli then
+            treesitter.install(opts.ensure_installed)
+        else
+            vim.notify('Parser installation requires tree-sitter CLI; run runs/50-neovim', vim.log.levels.WARN)
+        end
+
+        vim.api.nvim_create_autocmd('FileType', {
+            group = vim.api.nvim_create_augroup('roaixon_treesitter', { clear = true }),
+            -- Run after built-in ftplugins (Markdown starts its own highlighter in 0.12).
+            callback = vim.schedule_wrap(function(event)
+                local lang = vim.treesitter.language.get_lang(event.match)
+                if not lang then
+                    return
+                end
+                if vim.list_contains(treesitter.get_installed('parsers'), lang) then
+                    attach(event.buf, lang)
+                elseif has_cli and vim.list_contains(treesitter.get_available(), lang) then
+                    treesitter.install({ lang }):await(vim.schedule_wrap(function(err, installed)
+                        if not err and installed then
+                            attach(event.buf, lang)
+                        end
+                    end))
+                end
+            end),
+        })
     end,
 }

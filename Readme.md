@@ -23,6 +23,24 @@ zsh (Oh My Zsh, Powerlevel10k, autosuggestions) · tmux (resurrect, catppuccin) 
 
 WezTerm config is included — install WezTerm itself separately.
 
+### Updating an existing Neovim installation
+
+Neovim 0.12 requires the `main` branch of nvim-treesitter and tree-sitter CLI
+(installed by `runs/50-neovim`). The legacy `master` branch crashes when parsing
+Markdown code blocks.
+
+From this repository, apply the Tree-sitter update without reinstalling the other environments:
+
+```bash
+./runs/50-neovim
+cp env/.config/nvim/lua/plugins/treesitter.lua ~/.config/nvim/lua/plugins/treesitter.lua
+cp env/.config/nvim/lazy-lock.json ~/.config/nvim/lazy-lock.json
+nvim
+```
+
+Run `:Lazy restore nvim-treesitter`, restart Neovim, and allow the parsers to install.
+Use `:TSUpdate` after future Tree-sitter plugin updates.
+
 ## Keys
 
 | | |
